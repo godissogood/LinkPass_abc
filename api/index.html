@@ -86,49 +86,10 @@
             display: inline-block;
             transition: opacity 0.5s ease-in-out;
             color: #ffd700;
-            font-weight: bold;
-            background: rgba(255, 215, 0, 0.15);
-            padding: 4px 8px;
-            border-radius: 4px;
         }
         .iframe-with-title {
             margin-top: 40px;
             height: calc(100vh - 40px);
-        }
-        /* 新增复制按钮样式 */
-        .copy-btn {
-            background: rgba(255, 215, 0, 0.3);
-            border: 1px solid #ffd700;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 8px;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-        .copy-btn:hover {
-            background: rgba(255, 215, 0, 0.5);
-        }
-        .copy-btn.copied {
-            background: #4CAF50;
-            border-color: #4CAF50;
-        }
-        .tip-content {
-            display: flex;
-            align-items: center;
-        }
-        .tip-text-content {
-            margin-right: 8px;
-        }
-        .url-display {
-            font-size: 12px;
-            color: #ccc;
-            margin-top: 4px;
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
     </style>
 </head>
@@ -136,13 +97,7 @@
     <div id="title-bar" class="title-bar" style="display: none;">
         <div class="content">
             <span id="page-title" class="title-text">正在加载...</span>
-            <span id="page-tip" class="tip-text" style="display: none;">
-                <div class="tip-content">
-                    <span class="tip-text-content">如果画面长时间空白，请点击右上角选择在浏览器中打开！</span>
-                    <button id="copy-url-btn" class="copy-btn">复制链接</button>
-                </div>
-                <div id="current-url-display" class="url-display"></div>
-            </span>
+            <span id="page-tip" class="tip-text" style="display: none;">如果画面长时间空白，请点击右上角选择在浏览器中打开！</span>
         </div>
         <button class="close-btn" onclick="hideTitleBar()">隐藏</button>
     </div>
@@ -356,71 +311,10 @@
         }, 500);
     }
     
-    // 复制URL功能
-    function setupCopyButton() {
-        var copyBtn = document.getElementById('copy-url-btn');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', function() {
-                copyToClipboard(currentUrl);
-                
-                // 显示复制成功反馈
-                var originalText = copyBtn.textContent;
-                copyBtn.textContent = '已复制!';
-                copyBtn.classList.add('copied');
-                
-                // 2秒后恢复原状
-                setTimeout(function() {
-                    copyBtn.textContent = originalText;
-                    copyBtn.classList.remove('copied');
-                }, 2000);
-            });
-        }
-    }
-    
-    // 复制到剪贴板功能
-    function copyToClipboard(text) {
-        if (navigator.clipboard && window.isSecureContext) {
-            // 使用现代剪贴板API
-            navigator.clipboard.writeText(text).then(function() {
-                console.log('URL已复制到剪贴板');
-            }).catch(function(err) {
-                console.error('无法复制文本: ', err);
-                fallbackCopyToClipboard(text);
-            });
-        } else {
-            // 使用传统方法
-            fallbackCopyToClipboard(text);
-        }
-    }
-    
-    // 传统复制到剪贴板方法
-    function fallbackCopyToClipboard(text) {
-        var textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.opacity = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-            var successful = document.execCommand('copy');
-            var msg = successful ? '成功' : '失败';
-            console.log('复制文本' + msg);
-        } catch (err) {
-            console.error('无法复制文本: ', err);
-        }
-        
-        document.body.removeChild(textArea);
-    }
-    
     // 主函数
     function init() {
         var targetUrl = getTargetUrl();
         console.log("目标URL:", targetUrl);
-        
-        // 设置复制按钮事件
-        setupCopyButton();
         
         if (isInWeChatOrQQ()) {
             // 在QQ/微信中，显示iframe
@@ -657,25 +551,19 @@
     // 更新提示信息中的当前URL
     function updateTipWithCurrentUrl() {
         var tipElement = document.getElementById('page-tip');
-        var urlDisplay = document.getElementById('current-url-display');
-        
-        if (tipElement && urlDisplay) {
+        if (tipElement) {
             var displayUrl = currentUrl;
             // 如果URL太长，截取显示
             if (displayUrl.length > 60) {
-                try {
-                    var urlObj = new URL(displayUrl);
-                    var hostname = urlObj.hostname;
-                    var pathname = urlObj.pathname;
-                    if (pathname.length > 30) {
-                        pathname = '...' + pathname.substring(pathname.length - 27);
-                    }
-                    displayUrl = hostname + pathname;
-                } catch(e) {
-                    displayUrl = displayUrl.substring(0, 57) + '...';
+                var urlObj = new URL(displayUrl);
+                var hostname = urlObj.hostname;
+                var pathname = urlObj.pathname;
+                if (pathname.length > 30) {
+                    pathname = '...' + pathname.substring(pathname.length - 27);
                 }
+                displayUrl = hostname + pathname;
             }
-            urlDisplay.textContent = '当前页面: ' + displayUrl;
+            tipElement.innerHTML = `如果画面长时间空白，请点击右上角选择在浏览器中打开！<br><small>当前页面: ${displayUrl}</small>`;
         }
     }
     
